@@ -1,5 +1,4 @@
 import torch
 import torch.nn as nn
+import LoadData
 
-class LayoutToImage(nn.Module):
-    def __init__(self):
