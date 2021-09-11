@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
 from LoadData import MyDataset
-from TransformerEncoder.Embeddings import Embeddings
+from TransformerEncoder.TransformerEncoder import TransformerEncoder
 
 def get_dataset():
 	data = MyDataset(pkl_path='dataset/obj.pkl', image_dir='dataset/images/')
@@ -15,15 +15,20 @@ def train(args=None):
 	train_loader = DataLoader(train_data, batch_size=1, shuffle=True, num_workers=0)
 	image, objects, boxes = iter(train_loader).next()
 	
-	net = Embeddings(d_model=args['d_model'], num_classes=args['num_classes'])
+	net1 = TransformerEncoder(d_model=args['d_model'],
+             				  num_classes=args['num_classes'],
+             				  num_trans_layers=args['num_trans_layers'], 
+             				  num_heads=args['num_heads'],
+             				  d_ffn=args['d_ffn'],
+             				  dropout=0.0)
 	
 	for epoch in range(args['total_epoch']):
-		net.train()
+		net1.train()
 
 		for index, data in enumerate(train_loader):
 			image, objects, boxes = data
-			output = net(objects, boxes)
-			print(output)
+			output = net1(objects, boxes)
+			#print(output)
 			break
 
 '''
@@ -44,20 +49,14 @@ inf = inf[0:64]
 with open('dataset/obj.pkl', 'wb') as fr:
 	inf = pickle.dump(inf, fr)
 '''
-args = {'d_model':512,
+
+#测试用参数
+args = {'d_model':16,
+		'total_epoch':1,
 	   	'batch_size':1,
 	   	'num_classes':2500,
-	   	'total_epoch':1
+	   	'num_trans_layers':1,
+	   	'num_heads':2,
+	   	'd_ffn':16,
 	   }
 train(args)
-
-'''
-t1 = torch.FloatTensor([[1, 2], [5, 6]])
-t2 = torch.FloatTensor([[3, 4], [7, 8]])
-l = []
-l.append(t1)
-l.append(t2)
-ta = torch.cat(l, dim=0)
-print(type(l))
-print(ta)
-'''
