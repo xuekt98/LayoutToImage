@@ -3,14 +3,9 @@ import os
 import torch
 from torch.autograd import Function
 from torch.utils.cpp_extension import load
-<<<<<<< HEAD
 import torch.nn.functional as F
 
 import pdb
-=======
-
-
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 module_path = os.path.dirname(__file__)
 upfirdn2d_op = load(
     'upfirdn2d',
@@ -23,13 +18,7 @@ upfirdn2d_op = load(
 
 class UpFirDn2dBackward(Function):
     @staticmethod
-<<<<<<< HEAD
     def forward(ctx, grad_output, kernel, grad_kernel, up, down, pad, g_pad, in_size, out_size):
-=======
-    def forward(
-        ctx, grad_output, kernel, grad_kernel, up, down, pad, g_pad, in_size, out_size
-    ):
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
         up_x, up_y = up
         down_x, down_y = down

@@ -5,16 +5,10 @@ from torch import nn
 from torch.autograd import Function
 from torch.utils.cpp_extension import load
 
-<<<<<<< HEAD
 import pdb
 module_path = os.path.dirname(__file__)
 fused = load(
     'fused_bias_act',
-=======
-module_path = os.path.dirname(__file__)
-fused = load(
-    'fused',
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
     sources=[
         os.path.join(module_path, 'fused_bias_act.cpp'),
         os.path.join(module_path, 'fused_bias_act_kernel.cu'),
@@ -39,10 +33,6 @@ class FusedLeakyReLUFunctionBackward(Function):
 
         if grad_input.ndim > 2:
             dim += list(range(2, grad_input.ndim))
-<<<<<<< HEAD
-=======
-
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
         grad_bias = grad_input.sum(dim).detach()
 
         return grad_input, grad_bias

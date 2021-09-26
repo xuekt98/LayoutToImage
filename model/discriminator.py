@@ -38,10 +38,7 @@ class ObjDiscriminator64(nn.Module):
 	def __init__(self, num_classes=81):
 		super(ObjDiscriminator64, self).__init__()
 		self.obD = ResnetDiscriminator64(num_classes=num_classes, input_dim=3)
-<<<<<<< HEAD
 		self.COUNT_F = 0
-=======
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 	def forward(self, images, bbox, label, mask=None):
 		'''
@@ -57,13 +54,7 @@ class ObjDiscriminator64(nn.Module):
 			bbox = bbox.view(-1, 5)
 		else:
 			bbox = bbox.view(-1, 4)
-<<<<<<< HEAD
 
-=======
-			idx = torch.arange(start=0, end=bbox.size(0), device=images.device)
-			idx = idx.view(-1, 1).float()
-			bbox = torch.cat((idx, bbox), dim=-1)
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 		# only for input bbox: (x0, y0, h, w)
 		# bbox[:, :, 2] = bbox[:, :, 2] + bbox[:, :, 0]
@@ -74,10 +65,7 @@ class ObjDiscriminator64(nn.Module):
 		idx = (label != 0).nonzero().view(-1)
 		bbox = bbox[idx]
 		label = label[idx]
-<<<<<<< HEAD
 
-=======
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 		d_out_obj, d_out_obj_c = self.obD(images, label, bbox)
 		return d_out_obj, d_out_obj_c
 
@@ -92,21 +80,14 @@ class ResnetDiscriminator64(nn.Module):
 		self.block4 = ResBlock(ch * 4, ch * 8, downsample=True)
 		self.block5 = ResBlock(ch * 8, ch * 16, downsample=True)
 		# self.l_im = nn.utils.spectral_norm(nn.Linear(ch * 16, 1))
-<<<<<<< HEAD
 		self.activation = nn.Tanh()
-=======
-		self.activation = nn.ReLU()
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 		# object path
 		self.roi_align = ROIAlign((8, 8), 1.0 / 2.0, 0)
 		self.block_obj4 = ResBlock(ch * 4, ch * 8, downsample=True)
 		self.l_obj = nn.utils.spectral_norm(nn.Linear(ch * 8, 1))
 		self.l_y = nn.utils.spectral_norm(nn.Embedding(num_classes, ch * 8))
-<<<<<<< HEAD
 		self.COUNT_F = 0
-=======
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 		self.init_parameter()
 
@@ -119,7 +100,6 @@ class ResnetDiscriminator64(nn.Module):
 		# 32x32
 		x1 = self.block3(x)
 		# 16x16
-<<<<<<< HEAD
 		# x = self.block4(x1)
 		# 8x8
 		# x = self.block5(x)
@@ -137,22 +117,6 @@ class ResnetDiscriminator64(nn.Module):
 		out_obj = self.l_obj(obj_feat)
 		out_obj_c = out_obj + torch.mean(self.l_y(y).view(b, -1) * obj_feat.view(b, -1), dim=1, keepdim=True)
 		self.COUNT_F += 1
-=======
-		x = self.block4(x1)
-		# 8x8
-		x = self.block5(x)
-		x = self.activation(x)
-		x = torch.mean(x, dim=(2, 3))
-		# out_im = self.l_im(x)
-
-		# obj path
-		obj_feat = self.roi_align(x1, bbox)
-		obj_feat = self.block_obj4(obj_feat)
-		obj_feat = self.activation(obj_feat)
-		obj_feat = torch.sum(obj_feat, dim=(2, 3))
-		out_obj = self.l_obj(obj_feat)
-		out_obj_c = out_obj + torch.sum(self.l_y(y).view(b, -1) * obj_feat.view(b, -1), dim=1, keepdim=True)
->>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 		return out_obj, out_obj_c
 
