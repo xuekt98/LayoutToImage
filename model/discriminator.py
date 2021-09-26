@@ -66,6 +66,10 @@ class ObjDiscriminator64(nn.Module):
 		bbox = bbox[idx]
 		label = label[idx]
 
+		if bbox.dim() < 5:
+			bidx = torch.arange(start=0, end=images.size(0), device=images.device).view(images.size(0), 1)
+			bbox = torch.cat([bidx, bbox], dim=1)
+
 		d_out_obj, d_out_obj_c = self.obD(images, label, bbox)
 		return d_out_obj, d_out_obj_c
 
@@ -108,9 +112,7 @@ class ResnetDiscriminator64(nn.Module):
 		# out_im = self.l_im(x)
 
 		# obj path
-		# if self.COUNT_F == 110 or self.COUNT_F == 0:
-		# 	pdb.set_trace()
-		obj_feat = self.roi_align(x1, list(bbox)) if bbox.dim() < 5 else self.roi_align(x1, bbox)
+		obj_feat = self.roi_align(x1, bbox)
 		obj_feat = self.block_obj4(obj_feat)
 		obj_feat = self.activation(obj_feat)
 		obj_feat = torch.mean(obj_feat, dim=(2, 3))
