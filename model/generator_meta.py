@@ -37,10 +37,16 @@ class G_NET_obj(nn.Module):
 		self.COUNT_F = 0
 
 	def forward(self, objects, boxes, latent_s):
+<<<<<<< HEAD
 		# if self.COUNT_F == 9:
 		# 	pdb.set_trace()
 		b, o, d = latent_s.shape
 		latent_s = self.mapping(latent_s.view(-1, d)).view(b, o, d)
+=======
+		if self.COUNT_F == 9:
+			pdb.set_trace()
+		latent_s = self.mapping(latent_s)
+>>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 		v_code, attn_map = self.encoder(objects, boxes, latent_s)  # (b*o)chw, list: len->n_layer of encoder, per (b*n_h)oo
 		mask, mask_feat = self.vec2mask(v_code, boxes, self.base_size)

@@ -16,8 +16,12 @@ import torch.backends.cudnn as cudnn
 import pdb
 
 cudnn.benchmark = True
+<<<<<<< HEAD
 torch.manual_seed(1234)
 torch.autograd.set_detect_anomaly(True)
+=======
+# torch.manual_seed(1234)
+>>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 
 def data_to(sample, device):
 		for i, s in enumerate(sample):
@@ -79,6 +83,10 @@ def train(args=None):
 			data = next(train_loader)
 			real_images, objects, boxes = data_to(data, device)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 			# update D network
 			netD.zero_grad()
 			real_obj_images = extract_obj_layer(real_images, boxes, objects, args['base_size'])
@@ -97,8 +105,13 @@ def train(args=None):
 
 			# update G network
 			if (idx % 1) == 0:
+<<<<<<< HEAD
 				if idx == 36:
 					pdb.set_trace()
+=======
+				# if idx == 8:
+				# 	pdb.set_trace()
+>>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 				netG.zero_grad()
 				g_out_obj, g_out_obj_c = netD(fake_images, boxes, objects)
 				g_loss_obj = - g_out_obj.mean()
@@ -110,7 +123,10 @@ def train(args=None):
 				# g_loss = g_loss_obj * lamb_obj + g_loss_fake * lamb_img + pixel_loss + feat_loss
 				g_loss = g_loss_obj * lamb_obj + g_loss_obj_c * lamb_obj_c
 				g_loss.backward()
+<<<<<<< HEAD
 				torch.nn.utils.clip_grad_norm_(netG.parameters(), 0.5)
+=======
+>>>>>>> 298b1038dc8f4d83ad944e45d69cfb891bbaa301
 				g_optimizer.step()
 
 				pbar.set_description(
