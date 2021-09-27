@@ -22,5 +22,8 @@ def extract_obj_layer(images, bbox, label, base_size):
 
 	return images
 
+def image_resize(images, size):
+	return Resize(size)(images)
+
 
 

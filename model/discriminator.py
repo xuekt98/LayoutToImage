@@ -38,7 +38,6 @@ class ObjDiscriminator64(nn.Module):
 	def __init__(self, num_classes=81):
 		super(ObjDiscriminator64, self).__init__()
 		self.obD = ResnetDiscriminator64(num_classes=num_classes, input_dim=3)
-		self.COUNT_F = 0
 
 	def forward(self, images, bbox, label, mask=None):
 		'''
@@ -46,6 +45,9 @@ class ObjDiscriminator64(nn.Module):
 		bbox: bo4 (o is the max no. which is set in configuration of obj)
 		mask: \prehold
 		'''
+
+
+
 		bbox = bbox * images.size(2)
 		if images.shape[0] == bbox.shape[0]:
 			idx = torch.arange(start=0, end=images.size(0), device=images.device)
@@ -66,11 +68,12 @@ class ObjDiscriminator64(nn.Module):
 		bbox = bbox[idx]
 		label = label[idx]
 
-		if bbox.dim() < 5:
-			bidx = torch.arange(start=0, end=images.size(0), device=images.device).view(images.size(0), 1)
+		if bbox.shape[-1] < 5:
+			bidx = torch.arange(start=0, end=images.size(0), device=images.device).view(images.size(0), 1).float()
 			bbox = torch.cat([bidx, bbox], dim=1)
 
 		d_out_obj, d_out_obj_c = self.obD(images, label, bbox)
+
 		return d_out_obj, d_out_obj_c
 
 class ResnetDiscriminator64(nn.Module):
@@ -84,18 +87,18 @@ class ResnetDiscriminator64(nn.Module):
 		self.block4 = ResBlock(ch * 4, ch * 8, downsample=True)
 		self.block5 = ResBlock(ch * 8, ch * 16, downsample=True)
 		# self.l_im = nn.utils.spectral_norm(nn.Linear(ch * 16, 1))
-		self.activation = nn.Tanh()
+		self.activation = nn.ReLU()
 
 		# object path
 		self.roi_align = ROIAlign((8, 8), 1.0 / 2.0, 0)
 		self.block_obj4 = ResBlock(ch * 4, ch * 8, downsample=True)
 		self.l_obj = nn.utils.spectral_norm(nn.Linear(ch * 8, 1))
 		self.l_y = nn.utils.spectral_norm(nn.Embedding(num_classes, ch * 8))
-		self.COUNT_F = 0
 
 		self.init_parameter()
 
 	def forward(self, x, y=None, bbox=None):
+
 		b = bbox.size(0)
 		# 64x64
 		x = self.block1(x)
@@ -117,8 +120,7 @@ class ResnetDiscriminator64(nn.Module):
 		obj_feat = self.activation(obj_feat)
 		obj_feat = torch.mean(obj_feat, dim=(2, 3))
 		out_obj = self.l_obj(obj_feat)
-		out_obj_c = out_obj + torch.mean(self.l_y(y).view(b, -1) * obj_feat.view(b, -1), dim=1, keepdim=True)
-		self.COUNT_F += 1
+		out_obj_c = torch.sigmoid(torch.mean(self.l_y(y) * obj_feat.view(b, -1), dim=1, keepdim=True))
 
 		return out_obj, out_obj_c
 

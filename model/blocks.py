@@ -153,7 +153,6 @@ class EqualLinear(nn.Module):
                 input, self.weight * self.scale, bias=self.bias * self.lr_mul
             )
 
-
         return out
 
     def __repr__(self):

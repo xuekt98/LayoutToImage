@@ -28,17 +28,18 @@ class G_NET_obj(nn.Module):
 															Decoder_hidden_features=cfg['d_v2mh'], Decoder_num_hidden_layers=cfg['l_v2mh'], )
 
 		self.gen = CIPSskipObj(size=cfg['base_size'], ltnt_size=cfg['d_noise2'],
-												style_dim=cfg['d_style'], n_mlp=cfg['n_gmlp'],
+												style_dim=cfg['d_style'], n_mlp=4,
 												vm_dim=cfg['d_model'],
 												activation=None, channel_multiplier=2, )
+		# self.gen = CIPSskipObj(size=cfg['base_size'], ltnt_size=cfg['d_noise2'],
+		# 										style_dim=cfg['d_style'], n_mlp=cfg['n_gmlp'],
+		# 										vm_dim=cfg['d_model'],
+		# 										activation=None, channel_multiplier=2, )
 
 		self.base_size = cfg['base_size']
 		self.d_latent_a = cfg['d_noise2']
-		self.COUNT_F = 0
 
 	def forward(self, objects, boxes, latent_s):
-		# if self.COUNT_F == 9:
-		# 	pdb.set_trace()
 		b, o, d = latent_s.shape
 		latent_s = self.mapping(latent_s.view(-1, d)).view(b, o, d)
 
@@ -53,7 +54,6 @@ class G_NET_obj(nn.Module):
 		mask_feat = mask_feat[idx]
 		latent_a = torch.randn(mask.size(0), self.d_latent_a, device=objects.device)
 
-
 		im_fm, im_rgb, style_ltnt = self.gen(mask=mask,
 																				 v_code=v_code,
 																				 mask_feat=mask_feat,
@@ -64,7 +64,6 @@ class G_NET_obj(nn.Module):
 																				 input_is_latent=False,
 																				 return_rgb=True
 																				 )
-		self.COUNT_F += 1
 		return im_rgb, mask		# im_rgb: ((b*o')chw), mask: ((b*o')1hw)
 
 class G_NET_agg(nn.Module):

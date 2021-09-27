@@ -126,7 +126,7 @@ class CIPSskip(nn.Module):
 		return res
 
 class CIPSskipObj(nn.Module):
-	def __init__(self, size=256, ltnt_size=512, n_mlp=8, n_coaffin=3, vm_dim=256, lr_mlp=0.01,
+	def __init__(self, size=256, ltnt_size=512, n_mlp=4, n_coaffin=3, vm_dim=256, lr_mlp=0.01,
 							 activation=None, channel_multiplier=2, **kwargs):
 		super(CIPSskipObj, self).__init__()
 
@@ -188,6 +188,7 @@ class CIPSskipObj(nn.Module):
 				)
 			)
 		self.coaffine = nn.Sequential(*ca_layers)
+		self.COUNT_F = 0
 
 	def forward(self,
 							mask,
@@ -209,15 +210,23 @@ class CIPSskipObj(nn.Module):
 		'''
 
 
-		batch_size, _, w, h = mask.shape
+
+		# batch_size, _, w, h = mask.shape
 
 		# latent = latent[0]
 		if truncation < 1:
 			latent = truncation_latent + truncation * (latent - truncation_latent)
 
+		# if self.COUNT_F == 22:
+		# 	pdb.set_trace()
+
 		if not input_is_latent:
 			latent = self.style(latent)  ## generate W
-			latent = self.coaffine(torch.cat((v_code, latent), dim=-1)).view(batch_size, -1)
+
+			# for i, layer in enumerate(self.style):
+			# 	latent = layer(latent)
+
+			latent = self.coaffine(torch.cat((v_code, latent), dim=-1))
 
 
 		x = mask_feat * mask
@@ -229,6 +238,8 @@ class CIPSskipObj(nn.Module):
 				x = self.linears[i*self.to_rgb_stride + j](x, latent) * mask
 
 			rgb = self.to_rgbs[i](x, latent, rgb)
+
+		self.COUNT_F += 1
 
 		res = [x]
 		if return_rgb:
