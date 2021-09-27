@@ -122,7 +122,7 @@ def train(args=None):
 						f'd: {d_loss:.4f}; g: {g_loss:.4f}'
 					)
 				)
-			if (idx) % 1000 == 0:
+			if (idx) % 10 == 0:
 				save_image(real_images, f"r_{idx}")
 				save_image(fake_images, f"f_{idx}")
 				save_image((mask > 0.5).long(), f"msk_{idx}")

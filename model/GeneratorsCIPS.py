@@ -235,7 +235,7 @@ class CIPSskipObj(nn.Module):
 		x = self.conv1(x, latent)
 		for i in range(self.n_intermediate):
 			for j in range(self.to_rgb_stride):
-				x = self.linears[i*self.to_rgb_stride + j](x, latent) * mask
+				x = self.linears[i*self.to_rgb_stride + j](x, latent)
 
 			rgb = self.to_rgbs[i](x, latent, rgb)
 
