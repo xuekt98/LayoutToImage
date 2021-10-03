@@ -1,1 +1,0 @@
-python pdb_tracker.py --path "./"
