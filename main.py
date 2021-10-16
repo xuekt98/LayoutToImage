@@ -20,6 +20,7 @@ import os
 from PIL import Image
 from torchvision.utils import make_grid
 from tqdm import tqdm
+import datetime
 
 
 def data_to(sample, device):
@@ -35,6 +36,8 @@ def sample_data(loader):
 
 
 def train_VQModel(args=None):
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    
     d_lr = args['d_lr']
     g_lr = args['g_lr']
     
@@ -47,6 +50,9 @@ def train_VQModel(args=None):
     #loss = VQLPIPSWithDiscriminator(**args['lossconfig'])
     netD = NLayerDiscriminator(**args['DiscriminatorConfig']).apply(weights_init).to(device)
     P_Loss = LPIPS().to(device).eval()
+    state_dict = torch.load('/home/pc/Mine/project/GitRepository/LayoutToImage/LayoutToImage/output/models/GD_10000.pth')
+    netG.load_state_dict(state_dict['netG'])
+    netD.load_state_dict(state_dict['netD'])
     
     #initialize optimizer
     gen_params = []
@@ -69,21 +75,21 @@ def train_VQModel(args=None):
 
         # update D network
         netD.zero_grad()
-        images_rec, qloss = netG(images)
+        images_rec, avg_emb_loss, var_emb_loss = netG(images)
         logits_real = netD(images.contiguous().detach())
         logits_fake = netD(images_rec.contiguous().detach())
         disc_factor = adopt_weight(1.0, idx, 5000)  # 在第一万轮之前不更新Discriminator
-        d_loss = disc_factor * hinge_d_loss(logits_real, logits_fake)
+        d_loss = hinge_d_loss(logits_real, logits_fake) * disc_factor
         d_loss.backward()
         d_optimizer.step()
         
         # update G network
         netG.zero_grad()
-        ploss = P_Loss(images.contiguous(), images_rec.contiguous())
-        rec_loss = torch.abs(images.contiguous() - images_rec.contiguous()) + ploss
+        #ploss = P_Loss(images.contiguous(), images_rec.contiguous())
+        rec_loss = torch.abs(images.contiguous() - images_rec.contiguous()) #重新构建图片的损失
         rec_loss = torch.mean(rec_loss)
         logits_fake = netD(images_rec.contiguous())
-        g_loss = -torch.mean(logits_fake) * disc_factor + rec_loss + qloss.mean()
+        g_loss = -torch.mean(logits_fake) + rec_loss + avg_emb_loss.mean() + var_emb_loss.mean()
         g_loss.backward()
         g_optimizer.step()
         
@@ -93,17 +99,17 @@ def train_VQModel(args=None):
             )
         )
         
-        if idx % 100 == 0:
-            save_image(images, f"ori_{idx}")
-            save_image(images_rec, f"rec_{idx}")
-        if idx % 5000 == 0:
+        if idx % 500 == 0:
+            save_image(images, now, f"ori_{idx}")
+            save_image(images_rec, now, f"rec_{idx}")
+        if idx % 10000 == 0:
             state_dict = {
                 'netG': netG.state_dict(),
                 'netD': netD.state_dict(),
                 'netG_optim': g_optimizer.state_dict(),
                 'netD.optim': d_optimizer.state_dict()
             }
-            torch.save(state_dict, os.path.join(args['model_path'], f'GD_{idx}.pth'))
+            torch.save(state_dict, os.path.join(args['model_path'], now, f'GD_{idx}.pth'))
 
 
 def hinge_d_loss(logits_real, logits_fake):
@@ -136,10 +142,12 @@ def mkdir(dir):
             os.mkdir(dir)
 
 
-def save_image(img, im_name):
+def save_image(img, im_name, folder):
     image = make_grid(img.cpu().data, nrow=4).permute(1, 2, 0).contiguous().numpy()
     image = Image.fromarray(((image + 1.0) * 127.5).astype(np.uint8))
-    image.save(os.path.join(args['image_path'], f'{im_name}.png'))
+    image.save(os.path.join(args['image_path'], folder, f'{im_name}.png'))
+
+
 
 
 args = {
@@ -147,13 +155,13 @@ args = {
     'g_lr': 0.0001,
     'batch_size': 4,
     'start_epoch': 0,
-    'total_epoch': 30000,
+    'total_epoch': 60000,
     'image_path': './output/images',
     'model_path': './output/models',
     'VQConfig': {
         'embed_dim': 256,
         'n_embed': 1024,
-        'edconfig': {
+        'edconfig': { # encoder and decoder configuration
             'double_z': False,
             'z_channels': 256,
             'resolution': 256,
@@ -163,8 +171,29 @@ args = {
             'ch_mult': [1,1,2,2,4],
             'num_res_blocks': 2,
             'attn_resolutions': [16],
-            'dropout': 0.0
+            'dropout': 0.0,
         },
+        'AvgMappingConfig': { # 均值映射的实现方式
+            'in_features': 256,
+            'out_features': 256,
+            'hidden_features': 512,
+            'num_hidden_layers': 2,
+            'nonlinearity': 'relu',
+        },
+        'VarMappingConfig': { # 方差映射的实现方式
+            'in_features': 256,
+            'out_features': 256,
+            'hidden_features': 512,
+            'num_hidden_layers': 2,
+            'nonlinearity': 'relu',
+        },
+        'SampleMappingConfig': { # 方差映射的实现方式
+            'in_features': 256,
+            'out_features': 256,
+            'hidden_features': 512,
+            'num_hidden_layers': 2,
+            'nonlinearity': 'relu',
+        }
     },
     'lossconfig': {
         'disc_conditional': False,

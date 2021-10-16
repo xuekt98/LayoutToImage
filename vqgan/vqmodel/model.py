@@ -375,3 +375,81 @@ class Decoder(nn.Module):
         h = nonlinear(h)
         h = self.conv_out(h)
         return h
+
+
+class MLPBlock(nn.Module):
+    """自定义的MLP层"""
+    def __init__(self, in_features, out_features, hidden_features, num_hidden_layers,
+                 outermost_linear=False, nonlinearity='relu', weight_init=None):
+        """
+        :param in_features: 输入维度
+        :param out_features: 输出维度
+        :param hidden_features: 隐藏层维度
+        :param num_hidden_layers: 隐藏层个数
+        :param outermost_linear: 最外层是否是线性层
+        :param nonlinearity: 非线性
+        :param weight_init: 权重初始化方式
+        """
+        super(MLPBlock, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.hidden_features = hidden_features
+        self.num_hidden_layers = num_hidden_layers
+        self.outermost_linear = outermost_linear
+        self.nonlinearity = nonlinearity
+        
+        # 存储非线性激活函数与参数初始化方式的表
+        nls_and_inits = {'relu': (nn.ReLU(inplace=True), init_weights_normal, None),
+                         'sigmoid': (nn.Sigmoid(), init_weights_normal, None)}
+        nl, nl_weight_init, first_layer_init = nls_and_inits[self.nonlinearity]
+        if weight_init is not None:
+            self.weight_init = weight_init
+        else:
+            self.weight_init = nl_weight_init
+            
+        self.net = []
+        # 第一层，从输入维度到隐藏层维度
+        self.net.append(nn.Sequential(nn.Linear(in_features, hidden_features), nl))
+        
+        # 隐藏层
+        for i in range(num_hidden_layers):
+            self.net.append(nn.Sequential(
+                nn.Linear(hidden_features, hidden_features), nl
+            ))
+        
+        # 最后一层，从隐藏层维度到输出维度
+        if outermost_linear:
+            self.net.append(nn.Sequential(
+                nn.Linear(hidden_features, out_features)
+            ))
+        else:
+            self.net.append(nn.Sequential(
+                nn.Linear(hidden_features, out_features), nl
+            ))
+        self.net = nn.Sequential(*self.net)
+        
+        #初始化模型参数
+        if self.weight_init is not None:
+            self.net.apply(self.weight_init)
+        if first_layer_init is not None:
+            self.net[0].apply(first_layer_init)
+    
+    def forward(self, input):
+        return self.net(input)
+
+# 参数初始化方式 kaming分布初始化
+def init_weights_normal(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            nn.init.kaiming_normal_(m.weight, a=0.0, nonlinearity='relu', mode='fan_in')
+
+# 参数初始化方式 Xavier分布初始化
+def init_weights_xavier(m):
+    if type(m) == nn.Linear:
+        if hasattr(m, 'weight'):
+            nn.init.xavier_normal_(m.weight)
+
+
+# class ConvBlock(nn.Module):
+    # """自定义的卷积层"""
+    # def __init__(self):
