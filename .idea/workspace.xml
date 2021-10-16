@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="dfcd5828-b322-45d2-b9e2-6186f125ac98" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vqgan/vqmodel/model.py" beforeDir="false" afterPath="$PROJECT_DIR$/vqgan/vqmodel/model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vqgan/vqmodel/vqgan.py" beforeDir="false" afterPath="$PROJECT_DIR$/vqgan/vqmodel/vqgan.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
